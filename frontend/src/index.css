@@ -1,0 +1,279 @@
+/* General styles */
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Marker bubble style */
+.marker-bubble {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    color: #333;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    white-space: pre-wrap; /* Allows text to wrap */
+    max-width: 150px;     /* Prevent bubbles from being too wide */
+    text-align: center;   /* Center the text inside the bubble */
+}
+/* --- 新增的 hover 状态样式 --- */
+.marker-bubble:hover {
+    transform: scale(1.1); /* 3. 鼠标悬停时，放大到1.1倍 */
+    z-index: 10; /* 4. (可选但推荐) 将其层级提高，防止被其他标记遮挡 */
+}
+/* Overlay background (modal) */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+/* Modal content box */
+.modal-content {
+    position: relative;
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90%;
+    overflow-y: auto;
+  }
+
+/* Close button (X) */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+  }
+  .close-btn:hover {
+    color: #333;
+  }
+
+/* Form inputs */
+  form input[type="text"], form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  form textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  form input[type="file"] {
+    margin-top: 5px;
+  }
+  
+  /* Buttons */
+  form button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #fff;
+    background: #409eff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  form button:hover {
+    background: #66b1ff;
+  }
+/* Reply and comment detail content */
+#commentDetail p,
+#repliesList p {
+  margin: 5px 0;
+}
+#repliesList .reply-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+#repliesList .reply-item:last-child {
+  border-bottom: none;
+}
+
+/* Images in comment/reply content */
+.comment-image,
+.reply-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+}
+
+/* Loading and error messages */
+.loading-indicator,
+.error-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px;
+  z-index: 1001;
+}
+
+.error-message {
+  background: rgba(255, 0, 0, 0.7);
+}
+
+/* Toast样式 */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.toast {
+  padding: 12px 24px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  color: white;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast.info {
+  background-color: #2196F3;
+}
+
+.toast.success {
+  background-color: #4CAF50;
+}
+
+.toast.error {
+  background-color: #F44336;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* 布局样式 */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background: #409eff;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+main {
+  flex: 1;
+  padding: 1rem;
+}
+
+footer {
+  background: #f5f5f5;
+  padding: 1rem;
+  text-align: center;
+}
+.custom-marker {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 10px 15px;
+  width: 150px; /* 信息窗宽度 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  cursor: pointer;
+  border: 1px solid #eee;
+  /* 添加过渡效果，让悬浮动画更平滑 */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.custom-marker:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.marker-username {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.marker-text {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  /* 为了美观，限制显示两行文本 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+/* 这个是用来创建指向下方的小箭头 */
+.marker-arrow {
+  position: absolute;
+  bottom: -10px; /* 箭头位置 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white; /* 箭头颜色与背景一致 */
+}
+
+/* 解决箭头在有边框时的小缝隙问题 */
+.marker-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
+}

@@ -1,0 +1,5 @@
+backend/uv.lock
+backend/database/*.db
+backend/static/img
+frontend/node_modules/
+**/__pycache__
