@@ -9,9 +9,26 @@ comments_bp = Blueprint('comments_bp', __name__)
 
 @comments_bp.route('/comments/all', methods=['GET'])
 def get_all_comment_locations():
-    """获取所有评论位置的最新评论，用于在地图上打点"""
-    comments_for_markers = db.get_one_comment_for_each_location()
-    return jsonify({"success": True, "comments": comments_for_markers})
+    """
+    获取当前地图视野内的评论，用于在地图上打点。
+    需要提供四个查询参数: sw_lat, sw_lng, ne_lat, ne_lng
+    """
+    try:
+        # 从查询参数中获取边界坐标
+        sw_lat = float(request.args.get('sw_lat'))
+        sw_lng = float(request.args.get('sw_lng'))
+        ne_lat = float(request.args.get('ne_lat'))
+        ne_lng = float(request.args.get('ne_lng'))
+    except (TypeError, ValueError, AttributeError):
+        return jsonify({
+            "success": False, 
+            "error": "无效或缺失的边界坐标参数 (sw_lat, sw_lng, ne_lat, ne_lng)"
+        }), 400
+
+    # 调用新的数据库函数
+    comments_in_view = db.get_comments_in_bounds(sw_lat, sw_lng, ne_lat, ne_lng)
+    
+    return jsonify({"success": True, "comments": comments_in_view})
 
 @comments_bp.route('/comments', methods=['GET'])
 def get_comments_by_location_route():

@@ -60,8 +60,6 @@ const CommentItem = ({ comment, currentUser, onSetReply, onDeleteComment, onDele
 );
 
 const CommentList = ({ comments, currentUser, onSetReply, onDeleteComment, onDeleteReply, isLoading }) => {
-  console.log("CommentList received props:", { currentUser, comments });
-  
   if (isLoading) {
     return <p>正在加载评论...</p>;
   }

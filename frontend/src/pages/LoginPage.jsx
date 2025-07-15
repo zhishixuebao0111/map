@@ -33,33 +33,54 @@ const LoginPage= () =>{
   };
 
   return (
-    <div className="login-container">
-      <h2>用户登录</h2>
+    <div style={styles.container}>
+      <div style={styles.formContainer}>
+      <h2 style={styles.title}>用户登录</h2>
       {error && <div className="error-message">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>用户名</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>密码</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength="6"
-          />
-        </div>
-        <button type="submit">登录</button>
+      <div style={styles.formGroup}>
+            <label htmlFor="username" style={styles.label}>用户名</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              style={styles.input}
+            />
+          </div>
+        <div style={styles.formGroup}>
+            <label htmlFor="password" style={styles.label}>密码</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength="6"
+              style={styles.input}
+            />
+          </div>
+        <button 
+            type="submit" 
+            
+            style={styles.button}>登录
+            </button>
       </form>
+    </div>
     </div>
   );
 }
-
+const styles = {
+  // ... (styles 保持不变)
+  container: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f5f5f5', },
+  formContainer: { width: '100%', maxWidth: '400px', padding: '2rem', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', },
+  title: { marginBottom: '1.5rem', textAlign: 'center', color: '#333', },
+  form: { display: 'flex', flexDirection: 'column', },
+  formGroup: { marginBottom: '1rem', },
+  label: { display: 'block', marginBottom: '0.5rem', color: '#555', },
+  input: { width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', },
+  button: { padding: '0.75rem', backgroundColor: '#409eff', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer', marginTop: '1rem', },
+  error: { color: '#f56c6c', marginBottom: '1rem', textAlign: 'center', },
+  loginLink: { marginTop: '1.5rem', textAlign: 'center', color: '#666', },
+  link: { color: '#409eff', textDecoration: 'none', },
+};
 export default LoginPage;

@@ -167,33 +167,37 @@ def get_comments_by_location(lat, lng, radius=0.001): # 1. 将 radius 减小以�
         return []
     finally:
         if conn: conn.close()
-def get_one_comment_for_each_location():
-    """获取每个独立地理位置的一条最新评论（用于地图打点）"""
+def get_comments_in_bounds(sw_lat, sw_lng, ne_lat, ne_lng):
+    """
+    获取指定地理边界内的所有评论，用于地图标记。
+    这个查询可以进一步优化，例如，如果一个位置有多个评论，可以只返回一个，或者进行聚合。
+    但首先，我们实现基础的边界查询。
+    """
     comments = []
     conn = get_db_connection()
     if not conn: return comments
+
     try:
         with conn:
             cur = conn.cursor()
-            # 使用窗口函数获取每个位置最新的评论，性能更佳
+            # 查询纬度在西南角和东北角之间，且经度也在西南角和东北角之间的所有评论
+            # 注意：对于跨越 180 度经线的特殊情况，此查询需要更复杂的逻辑，但对于大多数应用场景已足够。
             cur.execute("""
-                SELECT id, name, text, img_url, lat, lng, created_at FROM (
-                    SELECT *, ROW_NUMBER() OVER(PARTITION BY lat, lng ORDER BY created_at DESC) as rn
-                    FROM comments
-                ) WHERE rn = 1;
-            """)
+                SELECT id, name, text, lat, lng, created_at 
+                FROM comments
+                WHERE (lat BETWEEN ? AND ?) AND (lng BETWEEN ? AND ?);
+            """, (sw_lat, ne_lat, sw_lng, ne_lng))
+            
             rows = cur.fetchall()
             for row in rows:
-                comment_dict = dict(row)
-                if comment_dict.get("img_url"):
-                    comment_dict["img_url"] = f"/static/img/{comment_dict['img_url']}"
-                comments.append(comment_dict)
+                comments.append(dict(row))
         return comments
     except Exception as e:
-        log.error(f"Failed to get one comment for each location: {e}", exc_info=True)
+        log.error(f"Failed to get comments in bounds: {e}", exc_info=True)
         return []
     finally:
         if conn: conn.close()
+
 def get_comment_with_details(comment_id):
     """获取单个评论的详细信息"""
     conn = get_db_connection()

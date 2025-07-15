@@ -3,14 +3,14 @@ import CommentForm from '../components/CommentForm';
 import CommentList from '../components/CommentList';
 import { useAuth } from '../contexts/AuthContext';
 import { Toaster, toast } from 'react-hot-toast';
-
+import ProfileDropdown from '../components/ProfileDropdown';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const MapPage = () => {
   const { isAuthenticated, token, currentUser } = useAuth();
   const commentFormRef = useRef(null); 
-  const [map, setMap] = useState(null);
+  const [setMap] = useState(null);
   const markersRef = useRef([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -18,8 +18,9 @@ const MapPage = () => {
   const [replyTo, setReplyTo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-
+  const isFetchingMarkers = useRef(false); // 添加一个锁，防止并发请求
+  const mapRef = useRef(null); 
+  const [isMapReady, setIsMapReady] = useState(false);
   const fetchCommentsForModal = useCallback(async (position) => {
     setLoading(true);
     setError(null);
@@ -41,6 +42,7 @@ const MapPage = () => {
 
   // --- 创建 Marker ---
   const createMarker = useCallback((comment) => {
+    const map = mapRef.current;
     if (!map) return null;
     const truncatedText = comment.text.length > 20 ? comment.text.substring(0, 20) + '...' : comment.text;
     const markerContent = `
@@ -65,25 +67,47 @@ const MapPage = () => {
     
     map.add(marker);
     return marker;
-  }, [map, fetchCommentsForModal]); // 依赖 map 和 fetchCommentsForModal
+  }, [fetchCommentsForModal]);
 
   // --- 加载地图上所有初始标记 ---
-  const fetchAndDrawInitialMarkers = useCallback(async () => {
-    if (!map) return;
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/comments/all`);
-      const data = await response.json();
-      if (data.success && data.comments) {
-        map.remove(markersRef.current);
-        markersRef.current = [];
-        const newMarkers = data.comments.map(comment => createMarker(comment));
-        markersRef.current = newMarkers.filter(m => m !== null);
-      }
-    } catch (err) {
-      console.error("加载初始标记失败:", err);
-      toast.error(err.message || "无法加载地图标记点");
-    }
-  }, [map, createMarker]);
+  const fetchAndDrawMarkersInView = useCallback(async () => {
+      const map = mapRef.current; // 直接从 ref 获取最新的 map 实例
+        if (!map || isFetchingMarkers.current) return;  
+        isFetchingMarkers.current = true;
+    
+        try {
+            const bounds = map.getBounds();
+            // ⭐️ 添加一个防御性检查，确保 bounds 对象存在
+            if (!bounds) {
+                console.warn("map.getBounds() 返回了 undefined，地图可能尚未完全就绪。已跳过本次刷新。");
+                isFetchingMarkers.current = false;
+                return;
+            }
+
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+    
+            const url = `${API_BASE_URL}/api/comments/all?sw_lat=${sw.lat}&sw_lng=${sw.lng}&ne_lat=${ne.lat}&ne_lng=${ne.lng}`;
+            const response = await fetch(url);
+            const data = await response.json();
+    
+            if (data.success && data.comments) {
+                map.remove(markersRef.current);
+                markersRef.current = [];
+                
+                const newMarkers = data.comments.map(comment => createMarker(comment));
+                markersRef.current = newMarkers.filter(m => m !== null);
+            }
+        } catch (err) {
+            console.error("加载视野内标记失败:", err);
+            // 只有在错误不是我们预期的警告时才 toast
+            if (!err.message.includes("getStatus")) {
+                 toast.error(err.message || "无法加载地图标记点");
+            }
+        } finally {
+            isFetchingMarkers.current = false;
+        }
+    }, [createMarker]);
 
   // --- 地图双击处理 ---
   // 1. 用 useCallback 包裹，以便在 useEffect 中安全使用
@@ -135,7 +159,7 @@ const MapPage = () => {
       
       // 成功后，刷新弹窗内的评论列表和地图上的标记
       await fetchCommentsForModal(selectedPosition);
-      await fetchAndDrawInitialMarkers();
+      await fetchAndDrawMarkersInView();
       
       if (isReply) setReplyTo(null);
       if (commentFormRef.current) {
@@ -172,7 +196,7 @@ const MapPage = () => {
         
         // 刷新数据
         fetchCommentsForModal(selectedPosition);
-        fetchAndDrawInitialMarkers();
+        fetchAndDrawMarkersInView();
 
     } catch (err) {
         toast.error(err.message || '删除评论时出错');
@@ -214,7 +238,7 @@ const MapPage = () => {
   };
 
   // --- 初始化地图 ---
-  useEffect(() => {
+   useEffect(() => {
     let mapInstance = null;
     const initMap = () => {
       mapInstance = new window.AMap.Map('map-container', {
@@ -222,18 +246,27 @@ const MapPage = () => {
         viewMode: '3D', pitch: 45,
         doubleClickZoom: false,
       });
-      mapInstance.addControl(new window.AMap.Scale());
-      mapInstance.addControl(new window.AMap.ToolBar());
-      
-      // 5. 绑定用 useCallback 包裹的稳定函数
-      mapInstance.on('dblclick', handleMapDoubleClick);
-      
-      setMap(mapInstance);
-    };
 
-    if (window.AMap && !map) {
+      mapInstance.on('complete', () => {
+        console.log("地图已完全加载！");
+        mapRef.current = mapInstance; // 将实例存入 ref
+        
+        // 添加控件
+        mapInstance.addControl(new window.AMap.Scale());
+        mapInstance.addControl(new window.AMap.ToolBar());
+        
+        // 绑定事件 (这里的函数引用现在是稳定的，不会变)
+        mapInstance.on('dblclick', handleMapDoubleClick);
+        mapInstance.on('moveend', fetchAndDrawMarkersInView);
+        mapInstance.on('zoomend', fetchAndDrawMarkersInView);
+
+        // 设置 ready 状态，触发后续操作
+        setIsMapReady(true);
+      });
+    };
+ if (window.AMap) {
       initMap();
-    } else if (!window.AMap) {
+    } else {
       const script = document.createElement('script');
       script.src = `https://webapi.amap.com/maps?v=2.0&key=be38f49d3fd17ed74d3940f14081bf75&plugin=AMap.Scale,AMap.ToolBar`;
       script.async = true;
@@ -243,23 +276,20 @@ const MapPage = () => {
 
     return () => {
       if (mapInstance) {
-        // 6. 清理时也使用同一个稳定的函数实例
-        mapInstance.off('dblclick', handleMapDoubleClick);
         mapInstance.destroy();
+        mapRef.current = null;
       }
     };
-  // 7. 修正依赖数组：现在它依赖的是一个稳定的函数，所以可以设为空数组，确保只运行一次
-  }, [handleMapDoubleClick]);
-
-  // --- 地图准备好后，加载初始标记 ---
+  }, [handleMapDoubleClick, fetchAndDrawMarkersInView]);  
   useEffect(() => {
-    if (map) {
-      fetchAndDrawInitialMarkers();
+    if (isMapReady) {
+      fetchAndDrawMarkersInView();
     }
-  }, [map, fetchAndDrawInitialMarkers]);
+  }, [isMapReady, fetchAndDrawMarkersInView]); 
 
   return (
     <div className="app">
+      <ProfileDropdown />
       <Toaster position="top-center" />
       <div id="map-container" className="map-container" />
 
