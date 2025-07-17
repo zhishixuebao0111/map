@@ -91,22 +91,35 @@ const MapPage = () => {
             const response = await fetch(url);
             const data = await response.json();
     
-            if (data.success && data.comments) {
-                map.remove(markersRef.current);
-                markersRef.current = [];
-                
-                const newMarkers = data.comments.map(comment => createMarker(comment));
-                markersRef.current = newMarkers.filter(m => m !== null);
-            }
-        } catch (err) {
-            console.error("加载视野内标记失败:", err);
-            // 只有在错误不是我们预期的警告时才 toast
-            if (!err.message.includes("getStatus")) {
-                 toast.error(err.message || "无法加载地图标记点");
-            }
-        } finally {
-            isFetchingMarkers.current = false;
-        }
+              if (data.success && data.comments) {
+              map.remove(markersRef.current);
+              markersRef.current = [];
+              
+              // 【核心修改】: 筛选出每个位置的第一条评论用于显示
+              const uniqueLocations = new Map();
+              const representativeComments = [];
+
+              // 因为后端已经按时间升序排好序，所以我们遍历时遇到的第一个就是最早的
+              for (const comment of data.comments) {
+                  const key = `${comment.lat},${comment.lng}`;
+                  if (!uniqueLocations.has(key)) {
+                      uniqueLocations.set(key, true); // 标记这个位置已经处理过
+                      representativeComments.push(comment); // 将这条最早的评论加入待显示列表
+                  }
+              }
+              
+              // 只为筛选出的代表性评论创建 Marker
+              const newMarkers = representativeComments.map(comment => createMarker(comment));
+              markersRef.current = newMarkers.filter(m => m !== null);
+          }
+          } catch (err) {
+          console.error("加载视野内标记失败:", err);
+          if (!err.message.includes("getStatus")) {
+               toast.error(err.message || "无法加载地图标记点");
+          }
+      } finally {
+          isFetchingMarkers.current = false;
+      }
     }, [createMarker]);
 
   // --- 地图双击处理 ---

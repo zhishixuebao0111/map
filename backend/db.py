@@ -180,12 +180,11 @@ def get_comments_in_bounds(sw_lat, sw_lng, ne_lat, ne_lng):
     try:
         with conn:
             cur = conn.cursor()
-            # 查询纬度在西南角和东北角之间，且经度也在西南角和东北角之间的所有评论
-            # 注意：对于跨越 180 度经线的特殊情况，此查询需要更复杂的逻辑，但对于大多数应用场景已足够。
             cur.execute("""
                 SELECT id, name, text, lat, lng, created_at 
                 FROM comments
-                WHERE (lat BETWEEN ? AND ?) AND (lng BETWEEN ? AND ?);
+                WHERE (lat BETWEEN ? AND ?) AND (lng BETWEEN ? AND ?)
+                ORDER BY created_at ASC
             """, (sw_lat, ne_lat, sw_lng, ne_lng))
             
             rows = cur.fetchall()

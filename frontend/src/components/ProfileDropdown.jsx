@@ -13,7 +13,7 @@ const ProfileDropdown = () => {
   const handleLogout = () => {
     logout();
     setIsOpen(false); // 关闭菜单
-    navigate('/login'); // 跳转到登录页
+    navigate('/map'); // 跳转到登录页
   };
 
   // 这是一个常用的技巧：当用户点击下拉菜单外部时，自动关闭它
@@ -121,7 +121,10 @@ const ProfileDropdown = () => {
             // --- 用户未登录 ---
             <li>
               <Link to="/login" onClick={() => setIsOpen(false)} style={styles.dropdownItemLink}>
-                登录 / 注册
+                登录
+              </Link> 
+              <Link to="/register" onClick={() => setIsOpen(false)} style={styles.dropdownItemLink}>
+                注册
               </Link>
             </li>
           )}
