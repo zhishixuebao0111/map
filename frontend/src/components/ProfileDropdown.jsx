@@ -8,7 +8,6 @@ const ProfileDropdown = () => {
   const { isAuthenticated, currentUser, logout } = useAuth(); // 从 AuthContext 获取登录状态、用户信息和登出函数
   const navigate = useNavigate();
   const dropdownRef = useRef(null); // 用于检测点击是否在组件外部
-
   // 登出处理函数
   const handleLogout = () => {
     logout();

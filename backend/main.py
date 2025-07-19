@@ -33,10 +33,12 @@ log.info("Extensions (JWT, CORS) initialized.")
 from routes.auth import auth_bp
 from routes.comments import comments_bp
 from routes.users import users_bp
+from routes.ai import ai_bp
 
 app.register_blueprint(auth_bp, url_prefix='/api/auth') # 建议给 auth 路由加个前缀
 app.register_blueprint(comments_bp, url_prefix='/api')
 app.register_blueprint(users_bp, url_prefix='/api/users') # 建议给 user 路由加个前缀
+app.register_blueprint(ai_bp, url_prefix='/api/ai')
 log.info("Blueprints registered.")
 
 

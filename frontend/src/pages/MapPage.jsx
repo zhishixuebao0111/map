@@ -4,7 +4,7 @@ import CommentList from '../components/CommentList';
 import { useAuth } from '../contexts/AuthContext';
 import { Toaster, toast } from 'react-hot-toast';
 import ProfileDropdown from '../components/ProfileDropdown';
-
+import HoverMenu from '../components/HoverMenu';
 const API_BASE_URL = 'http://localhost:5000';
 
 const MapPage = () => {
@@ -303,6 +303,7 @@ const MapPage = () => {
   return (
     <div className="app">
       <ProfileDropdown />
+      <HoverMenu items={menuItems} />
       <Toaster position="top-center" />
       <div id="map-container" className="map-container" />
 
@@ -345,5 +346,9 @@ const MapPage = () => {
     </div>
   );
 };
-
+const menuItems = [
+    { icon: '✨', label: 'AI 助手', path: '/ai' },
+    // 以后想加新功能，在这里加一行就行，例如:
+    { icon: '⚙️', label: '设置', path: '/settings' },
+  ];
 export default MapPage;
